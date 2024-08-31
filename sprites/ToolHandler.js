@@ -3,6 +3,7 @@ class ToolHandler {
         this.player = player;
         this.world = world;
         this.swordDamage = 35;
+        this.WiperDamage = 40;
         this.bowCooldown = 0; // Cooldown counter in frames
         this.bowCooldownDuration = 15; // Duration of cooldown in frames
     }
@@ -31,6 +32,18 @@ class ToolHandler {
         });
     }
 
+    useWiper() {
+        // Logic to attack mobs within range
+        const mobsInRange = this.player.game.sprites.filter(sprite =>
+            sprite instanceof Mob && this.isWithinRange(sprite.x, sprite.y, 6));
+
+        mobsInRange.forEach(mob => {
+            // isMouseOverMob is a method that checks if the mouse is over the mob
+            if (this.isMouseOverMob(mob)) {
+                mob.takeDamage(this.WiperDamage); // Damage amount
+            }
+        });
+    }
     useBow() {
         if (this.bowCooldown > 0) {
             return;
