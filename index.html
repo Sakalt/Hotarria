@@ -1,19 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>テラリア風ゲーム</title>
     <style>
         body, html {
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Hide scrollbars */
+            overflow: hidden; /* スクロールバーを非表示にします */
+        }
+        #controls {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            z-index: 1000;
+        }
+        button {
+            font-size: 20px;
+            margin: 5px;
         }
     </style>
 </head>
 <body style="background-color: white;">
     <canvas id="canvas" style="background-color: rgb(93, 93, 212);"></canvas>
+
+    <!-- モバイル用の操作ボタン -->
+    <div id="controls">
+        <button id="up">↑</button>
+        <button id="left">←</button>
+        <button id="down">↓</button>
+        <button id="right">→</button>
+        <button id="respawn">リスポーン</button>
+    </div>
+
+    <!-- JavaScriptの読み込み -->
     <script src="utils/getBlockImage.js"></script>
     <script src="utils/sounds.js"></script>
     <script src="utils/deathScreen.js"></script>
@@ -36,5 +57,22 @@
     <script src="game/World.js"></script>
     <script src="game/Game.js"></script>
     <script src="Main.js"></script>
+
+    <!-- モバイル対応のためのJavaScript -->
+    <script>
+        const game = new Game(800, 600);
+
+        document.getElementById('up').addEventListener('click', () => game.keys.add('w'));
+        document.getElementById('down').addEventListener('click', () => game.keys.add('s'));
+        document.getElementById('left').addEventListener('click', () => game.keys.add('a'));
+        document.getElementById('right').addEventListener('click', () => game.keys.add('d'));
+        document.getElementById('respawn').addEventListener('click', () => {
+            const player = game.sprites.find(sprite => sprite instanceof Player);
+            if (!player.isAlive) {
+                game.deathScreen = false;
+                player.respawn();
+            }
+        });
+    </script>
 </body>
 </html>
