@@ -25,7 +25,7 @@ class Crafting extends Sprite {
         this.recipes.push(new Recipe('summon', {'mob-meat': 10, 'diamond': 5}));
         this.recipes.push(new Recipe('armor', {'iron': 10, 'diamond': 5}));
         this.recipes.push(new Recipe('bow', {'stone': 10, 'iron': 5}));
-
+        this.recipes.push(new Recipe('Wiper', {'diamond': 4, 'iron': 6}));
     }
 
     draw(ctx) {
