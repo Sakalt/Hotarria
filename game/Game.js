@@ -1,10 +1,8 @@
-/* This is the main game engine. It's responsible for setting up the game, managing the game loop, handling
-user input, and coordinating the other parts of the game. It might also manage the game state, like whether
-the player died or won, or if the game is paused, etc. */
+/* これはメインのゲームエンジンです。ゲームの設定、ゲームループの管理、ユーザー入力の処理、
+   および他のゲーム要素の調整を行います。また、プレイヤーが死亡または勝利したか、ゲームが一時停止されているかなど、ゲームの状態も管理します。 */
 
 class Game {
-
-    // Create the canvas and the array of sprites
+    // キャンバスとスプライトの配列を作成します
     constructor(width, height) {
         this.canvas = document.getElementById('canvas');
         this.ctx = canvas.getContext('2d');
@@ -15,7 +13,7 @@ class Game {
         this.canvas.height = height;
         document.body.appendChild(this.canvas);
 
-        this.deathScreen = false; // Whether or not to show the death screen.
+        this.deathScreen = false; // 死亡画面を表示するかどうか
 
         this.selectedSlot = 0;
 
@@ -23,17 +21,17 @@ class Game {
         this.keys = new Set();
         this.camera = { x: 0, y: 0 };
 
+        // キーボードの入力をリスニング
         window.addEventListener('keydown', (event) => {
-
             /*
-            The sound track can only be initialized inside of an event listner
-            since the browser doesn't allow sounds unless through an event 
-            listener.
+            サウンドトラックはイベントリスナー内でのみ初期化できます。
+            これはブラウザがイベントリスナーを介してのみ音声を許可するためです。
             */
             if (!soundtrack) {
                 initSoundtrack("nature");
             }
 
+            // キー入力による動作の管理
             switch (event.key) {
                 case 'w':
                 case 'ArrowUp':
@@ -60,13 +58,12 @@ class Game {
                     break;
             }
 
-            // Handle number keys for selecting inventory slots
+            // インベントリスロットの選択（数字キー対応）
             if (event.key >= '1' && event.key <= '9') {
                 this.selectedSlot = parseInt(event.key) - 1;
             } else if (event.key === '0') {
                 this.selectedSlot = 9;
             }
-
         });
 
         window.addEventListener('keyup', (event) => {
@@ -99,9 +96,9 @@ class Game {
         window.addEventListener('mouseup', () => {
             this.mouseClick = { x: 0, y: 0 };
         });
-
     }
 
+    // 各種ゲッター関数
     getCanvas() {
         return this.canvas;
     }
@@ -130,41 +127,40 @@ class Game {
         return this.camera;
     }
 
-
     start() {
-        // Start the game loop
+        // ゲームループを開始
         this.loop();
     }
 
-    // Add a sprite to the array of sprites
+    // スプライトを配列に追加
     add(obj) {
         this.sprites.push(obj);
     }
 
     loop() {
-        // Clear the canvas
+        // キャンバスをクリア
         this.ctx.clearRect(0, 0, this.width, this.height);
 
-        // Update camera
+        // カメラの更新
         const player = this.sprites.find(sprite => sprite instanceof Player);
         if (player) {
             this.camera.x = Math.max(0, Math.min(this.world.width - this.width, player.x - this.width / 2));
             this.camera.y = Math.max(0, Math.min(this.world.height - this.height, player.y - this.height / 2));
         }
 
-        // Draw world with camera offset
+        // カメラオフセットでワールドを描画
         this.ctx.save();
         this.ctx.translate(-Math.round(this.camera.x), -Math.round(this.camera.y));
         this.world.draw(this.ctx);
 
-        // Update all the non-UI sprites
+        // 非UIスプライトをすべて更新
         for (let i = 0; i < this.sprites.length; i++) {
             if (!this.sprites[i].isUI) {
                 this.sprites[i].update();
             }
         }
 
-        // Draw all the non-UI sprites
+        // 非UIスプライトをすべて描画
         for (let i = 0; i < this.sprites.length; i++) {
             if (!this.sprites[i].isUI) {
                 this.sprites[i].draw(this.ctx);
@@ -178,22 +174,21 @@ class Game {
             return;
         }
 
-        // Update all the UI sprites
+        // UIスプライトをすべて更新
         for (let i = 0; i < this.sprites.length; i++) {
             if (this.sprites[i].isUI) {
                 this.sprites[i].update();
             }
         }
 
-        // Draw all the UI sprites
+        // UIスプライトをすべて描画
         for (let i = 0; i < this.sprites.length; i++) {
             if (this.sprites[i].isUI) {
                 this.sprites[i].draw(this.ctx);
             }
         }
 
-        // Schedule the next frame
+        // 次のフレームをスケジュール
         requestAnimationFrame(() => { this.loop() });
     }
-
 }
