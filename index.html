@@ -8,17 +8,17 @@
         body, html {
             margin: 0;
             padding: 0;
-            overflow: hidden;
-            position: relative;
+            overflow: hidden; /* スクロールバーを非表示にします */
+            position: relative; /* 相対位置の基準を設定 */
         }
         #canvas {
-            display: block;
+            display: block; /* デフォルトのインライン設定をブロックに変更 */
         }
         #controls {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            z-index: 1000;
+            position: absolute; /* ボタンを絶対位置で配置 */
+            bottom: 20px; /* 下から20pxの位置に配置 */
+            left: 20px; /* 左から20pxの位置に配置 */
+            z-index: 1000; /* キャンバスの上に表示するための最前面指定 */
         }
         button {
             font-size: 20px;
@@ -38,7 +38,6 @@
         <button id="down">↓</button>
         <button id="right">→</button>
         <button id="respawn">リスポーン</button>
-        <button id="nextSlotButton">次のスロットへ</button> <!-- 新しいボタンを追加 -->
     </div>
 
     <!-- JavaScriptの読み込み -->
