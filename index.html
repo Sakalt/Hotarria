@@ -9,26 +9,20 @@
             margin: 0;
             padding: 0;
             overflow: hidden; /* スクロールバーを非表示にします */
-            position: relative; /* 相対位置の基準を設定 */
-        }
-        #canvas {
-            display: block; /* デフォルトのインライン設定をブロックに変更 */
         }
         #controls {
-            position: absolute; /* ボタンを絶対位置で配置 */
-            bottom: 20px; /* 下から20pxの位置に配置 */
-            left: 20px; /* 左から20pxの位置に配置 */
-            z-index: 1000; /* キャンバスの上に表示するための最前面指定 */
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            z-index: 1000;
         }
         button {
             font-size: 20px;
             margin: 5px;
-            padding: 10px;
         }
     </style>
 </head>
-<body>
-    <!-- ゲームのキャンバス -->
+<body style="background-color: white;">
     <canvas id="canvas" style="background-color: rgb(93, 93, 212);"></canvas>
 
     <!-- モバイル用の操作ボタン -->
@@ -38,8 +32,6 @@
         <button id="down">↓</button>
         <button id="right">→</button>
         <button id="respawn">リスポーン</button>
-        <!-- HTMLにスロット変更ボタンを追加 -->
-        <button id="nextSlotButton">次のスロット</button>
     </div>
 
     <!-- JavaScriptの読み込み -->
@@ -69,18 +61,11 @@
     <!-- モバイル対応のためのJavaScript -->
     <script>
         const game = new Game(800, 600);
-        game.start(); // ゲームの開始を追加
 
-        document.getElementById('up').addEventListener('mousedown', () => game.keys.add('w'));
-        document.getElementById('down').addEventListener('mousedown', () => game.keys.add('s'));
-        document.getElementById('left').addEventListener('mousedown', () => game.keys.add('a'));
-        document.getElementById('right').addEventListener('mousedown', () => game.keys.add('d'));
-
-        document.getElementById('up').addEventListener('mouseup', () => game.keys.delete('w'));
-        document.getElementById('down').addEventListener('mouseup', () => game.keys.delete('s'));
-        document.getElementById('left').addEventListener('mouseup', () => game.keys.delete('a'));
-        document.getElementById('right').addEventListener('mouseup', () => game.keys.delete('d'));
-
+        document.getElementById('up').addEventListener('click', () => game.keys.add('w'));
+        document.getElementById('down').addEventListener('click', () => game.keys.add('s'));
+        document.getElementById('left').addEventListener('click', () => game.keys.add('a'));
+        document.getElementById('right').addEventListener('click', () => game.keys.add('d'));
         document.getElementById('respawn').addEventListener('click', () => {
             const player = game.sprites.find(sprite => sprite instanceof Player);
             if (!player.isAlive) {
