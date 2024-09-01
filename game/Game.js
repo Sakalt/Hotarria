@@ -1,24 +1,24 @@
 class Game {
     constructor(width, height) {
         this.canvas = document.getElementById('canvas');
-        this.ctx = canvas.getContext('2d');
+        this.ctx = this.canvas.getContext('2d');
         this.width = width;
         this.height = height;
         this.sprites = [];
         this.canvas.width = width;
         this.canvas.height = height;
-        document.body.appendChild(this.canvas);
 
         this.deathScreen = false;
-        this.selectedSlot = 0;
+        this.selectedSlot = 0; // 現在選択されているスロット
+        this.maxSlots = 10; // スロットの最大数
+
         this.world = new World(this.width, this.height);
         this.keys = new Set();
         this.camera = { x: 0, y: 0 };
-
         this.mouseClick = { x: 0, y: 0 };
-        this.isMousePressed = false; // マウスが押されているかどうか
+        this.isMousePressed = false;
 
-        // マウスクリック処理を追加
+        // マウスクリック処理
         window.addEventListener('mousedown', (event) => {
             this.mouseClick = { x: event.clientX, y: event.clientY };
             this.isMousePressed = true;
@@ -30,7 +30,7 @@ class Game {
 
         // キーボードの入力をリスニング
         window.addEventListener('keydown', (event) => {
-            if (!soundtrack) {
+            if (typeof soundtrack === 'undefined' || !soundtrack) {
                 initSoundtrack("nature");
             }
 
@@ -87,6 +87,20 @@ class Game {
                     break;
             }
         });
+
+        // スロットを変更するボタンのイベントリスナーを追加
+        const nextSlotButton = document.getElementById('nextSlotButton');
+        if (nextSlotButton) {
+            nextSlotButton.addEventListener('click', () => {
+                this.nextSlot();
+            });
+        }
+    }
+
+    // スロットを次の番号に変更するメソッド
+    nextSlot() {
+        this.selectedSlot = (this.selectedSlot + 1) % this.maxSlots;
+        console.log('選択されたスロット:', this.selectedSlot + 1); // デバッグ用
     }
 
     start() {
@@ -129,11 +143,9 @@ class Game {
             return;
         }
 
-        // プレイヤーの移動処理を追加
         if (this.isMousePressed && player) {
             const targetX = this.mouseClick.x + this.camera.x;
             const targetY = this.mouseClick.y + this.camera.y;
-
             const dx = targetX - player.x;
             const dy = targetY - player.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
