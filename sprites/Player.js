@@ -8,7 +8,7 @@ class Player {
         this.size = 16;
         this.inventory = inventory;
 
-        this.keys = new Set();
+        this.keys = this.game.getKeys();
 
         this.gravity = 3;
         this.grounded = false;
@@ -51,23 +51,6 @@ class Player {
         // Additional sprite for jetpack
         this.jetpackImage = new Image();
         this.jetpackImage.src = 'images/player-jetpack.png';
-
-        // Initialize button events
-        this.initControls();
-    }
-
-    initControls() {
-        document.getElementById('left').addEventListener('touchstart', () => this.keys.add('a'));
-        document.getElementById('left').addEventListener('touchend', () => this.keys.delete('a'));
-        
-        document.getElementById('right').addEventListener('touchstart', () => this.keys.add('d'));
-        document.getElementById('right').addEventListener('touchend', () => this.keys.delete('d'));
-        
-        document.getElementById('jump').addEventListener('touchstart', () => this.keys.add('w'));
-        document.getElementById('jump').addEventListener('touchend', () => this.keys.delete('w'));
-        
-        document.getElementById('use').addEventListener('touchstart', () => this.keys.add('u'));
-        document.getElementById('use').addEventListener('touchend', () => this.keys.delete('u'));
     }
 
     draw(ctx) {
@@ -100,6 +83,7 @@ class Player {
     }
 
     update() {
+
         // Check if the bottom of the player is touching the bottom of the world
         if (this.y + this.size * 2 >= this.world.height) {
             this.isAlive = false;
@@ -114,6 +98,7 @@ class Player {
             this.game.deathScreen = true;
             return;
         }
+
 
         if (this.keys.has('a')) {
             this.isMoving = true;
@@ -183,17 +168,59 @@ class Player {
             }
         }
 
-        if (this.keys.has('u')) {
-            this.useSelectedItem();
-        }
 
-        // Update the frame index for walking animation
         if (!this.jumping) {
+            // Update the frame index for walking animation
             if (this.isMoving) {
                 this.currentFrame = (this.currentFrame + 1) % 3;
             } else {
                 this.currentFrame = 0; // Standing still frame
             }
+        }
+
+        // Handle mouse clicks
+        const mouse = this.game.getMouse();
+        const camera = this.game.getCamera();
+
+        // If the mouse is clicked
+        if (mouse.x) {
+            // Calculate the block position relative to the player
+            const blockX = mouse.x + camera.x;
+            const blockY = mouse.y + camera.y;
+
+            const selectedSlot = this.inventory.selectedSlot;
+            const selectedItem = this.inventory.items[selectedSlot];
+
+            // Use the appropriate tool based on the selected item
+            if (selectedItem) {
+                if (selectedItem.name === "pickaxe") {
+                    this.toolHandler.usePickaxe(blockX, blockY);
+                } else if (selectedItem.name === "sword") {
+                    this.toolHandler.useSword();
+                } else if (selectedItem.name == "bow") {
+                    this.toolHandler.useBow();
+                } else if (selectedItem.name == "armor" && !this.isArmorEquipped) {
+                    this.maxHealth = 200; // Increase max health
+                    this.isArmorEquipped = true; // Set armor as equipped
+                    this.inventory.reduceItemCount(this.inventory.selectedSlot); // Remove armor from inventory
+                } else if (selectedItem.isPlaceable) {
+                    this.blockHandler.placeBlock(blockX, blockY, selectedItem.name);
+                } else if (selectedItem.name == "mob-meat") {
+                    if (this.mobMeatCooldown <= 0 && this.health < this.maxHealth) {
+                        this.health = Math.min(this.health + 50, this.maxHealth);
+                        this.inventory.reduceItemCount(selectedSlot);
+                        this.mobMeatCooldown = this.mobMeatCooldownDuration; // Start the cooldown
+                    }
+                } else if (selectedItem.name == "summon" && !this.bossAlive()) {
+                    const boss = new Boss(this, this.game);
+                    this.game.add(boss);
+                } else if (selectedItem.name == "jetpack" && !this.isJetPackEquipped) {
+                    this.isJetPackEquipped = true;
+                    this.speed += 5;
+                    this.inventory.reduceItemCount(this.inventory.selectedSlot); // Remove armor from inventory
+                }
+            }
+
         }
 
         // Reduce cooldown
@@ -207,55 +234,122 @@ class Player {
         }
 
         this.toolHandler.update();
+
     }
 
-    useSelectedItem() {
-        const mouse = this.game.getMouse();
-        const camera = this.game.getCamera();
-        const blockX = mouse.x + camera.x;
-        const blockY = mouse.y + camera.y;
-        const selectedSlot = this.inventory.selectedSlot;
-        const selectedItem = this.inventory.items[selectedSlot];
+    bossAlive() {
+        // Check if there is a Boss instance in the sprites array
+        return this.game.sprites.some(sprite => sprite instanceof Boss);
+    }
 
-        if (selectedItem) {
-            if (selectedItem.name === "pickaxe") {
-                this.toolHandler.usePickaxe(blockX, blockY);
-            } else if (selectedItem.name === "sword") {
-                this.toolHandler.useSword();
-            } else if (selectedItem.name === "bow") {
-                this.toolHandler.useBow();
-            } else if (selectedItem.name === "armor" && !this.isArmorEquipped) {
-                this.maxHealth = 200; // Increase max health
-                this.isArmorEquipped = true; // Set armor as equipped
-                this.inventory.reduceItemCount(this.inventory.selectedSlot); // Remove armor from inventory
-            } else if (selectedItem.isPlaceable) {
-                this.blockHandler.placeBlock(blockX, blockY, selectedItem.name);
-            } else if (selectedItem.name === "mob-meat") {
-                if (this.mobMeatCooldown <= 0) {
-                    this.health = Math.min(this.health + 20, this.maxHealth); // Increase health by 20
-                    this.inventory.reduceItemCount(this.inventory.selectedSlot); // Remove mob-meat from inventory
-                    this.mobMeatCooldown = this.mobMeatCooldownDuration; // Reset cooldown
-                }
+    // Helper method to check if a block position is within 3 blocks range of the player
+    isWithinRange(blockX, blockY) {
+
+        // Determine the direction of the block relative to the player
+        const isRight = blockX > this.x;
+        const isBelow = blockY > this.y;
+
+        // Adjust distance calculation based on direction
+        const adjustedX = isRight ? this.x + this.size : this.x;
+        const adjustedY = isBelow ? this.y + this.size * 2 : this.y;
+
+        // Calculate the distance from the player's position to the block
+        const distanceX = Math.abs(blockX - adjustedX);
+        const distanceY = Math.abs(blockY - adjustedY);
+
+        return distanceX < 3 * blockSize && distanceY < 3 * blockSize;
+    }
+
+
+    addToInventory(itemName) {
+        this.inventory.addItem(itemName);
+    }
+
+    takeDamage(amount) {
+        if (this.damageCooldown === 0) {
+            this.health -= amount;
+            this.damageCooldown = 60; // Set cooldown frames
+        }
+        if (this.health <= 0) {
+            this.isAlive = false;
+        }
+    }
+
+    move(dx, dy) {
+
+        let newX = this.x + dx;
+        let newY = this.y + dy;
+
+        let checkSizeX = false;
+        let checkSizeY = false;
+
+        // Moving to the right or down
+        if (dx > 0) {
+            checkSizeX = true;
+        }
+
+        if (dy > 0) {
+            checkSizeY = true;
+        }
+
+        // Check for collision before moving
+        if (this.canMoveTo(this.x, this.y, newX, newY, checkSizeX, checkSizeY)) {
+            if (this.canMoveTo(this.x, this.y + this.size, newX, newY + this.size, checkSizeX, checkSizeY)) {
+                this.x = newX;
+                this.y = newY;
             }
         }
     }
 
-    canMoveTo(x1, y1, x2, y2, ignoreLeftRight, ignoreTopBottom) {
-        // Check if movement is possible based on collision detection
-        if (!ignoreLeftRight && (this.game.isBlocked(x1, y1) || this.game.isBlocked(x2, y2))) {
+    canMoveTo(x, y, newX, newY, checkSizeX, checkSizeY) {
+
+
+        let blockSize = this.world.getBlockSize();
+
+        let pixelX = x;
+        let pixelY = y;
+
+        // If the player is moving right we need to account for the width
+        if (checkSizeX) {
+            pixelX += this.size;
+        } else {
+            pixelX = newX;
+        }
+
+        // If the player is moving down we need to account for the height
+        if (checkSizeY) {
+            pixelY += this.size;
+        } else {
+            pixelY = newY;
+        }
+
+        // Check if the block the player wants to move to is not sky
+        if (this.world.getBlock(pixelX, pixelY) && this.world.getBlock(pixelX, pixelY).getType() !== 'sky') {
             return false;
         }
-        if (!ignoreTopBottom && (this.game.isBlocked(x1, y1) || this.game.isBlocked(x2, y2))) {
-            return false;
+        if (x % blockSize !== 0 && this.world.getBlock(pixelX + blockSize, pixelY) &&
+            this.world.getBlock(pixelX + blockSize, pixelY).getType() !== 'sky') {
+            if (y != newY) {
+                return false;
+            }
         }
+        if (y % blockSize !== 0 && this.world.getBlock(pixelX, pixelY + blockSize) &&
+            this.world.getBlock(pixelX, pixelY + blockSize).getType() !== 'sky') {
+            if (x != newX) {
+                return false;
+            }
+        }
+
         return true;
     }
 
-    move(dx, dy) {
-        // Check if the new position is valid
-        if (this.canMoveTo(this.x + dx, this.y + dy, this.x + dx + this.size, this.y + dy + this.size, true, true)) {
-            this.x += dx;
-            this.y += dy;
-        }
+    respawn() {
+        // Fill the player health and put him at spawn point
+        this.isAlive = true;
+        this.health = this.maxHealth;
+        this.x = Math.floor(this.world.width / 2);
+        this.y = 10 * this.world.blockSize;
+        this.game.loop();
     }
+
 }
