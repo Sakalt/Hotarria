@@ -33,10 +33,10 @@
 
     <!-- モバイル用の操作ボタン -->
     <div id="controls">
-        <button id="up">↑</button>
-        <button id="left">←</button>
-        <button id="down">↓</button>
-        <button id="right">→</button>
+        <button id="left" class="button">Left</button>
+        <button id="right" class="button">Right</button>
+        <button id="jump" class="button">Jump</button>
+        <button id="use" class="button">Use</button>
         <button id="respawn">リスポーン</button>
         <button id="nextSlotButton">次のスロットへ</button> <!-- 新しいボタンを追加 -->
     </div>
@@ -69,16 +69,6 @@
     <script>
         const game = new Game(800, 600);
         game.start(); // ゲームの開始を追加
-
-        document.getElementById('up').addEventListener('mousedown', () => game.keys.add('w'));
-        document.getElementById('down').addEventListener('mousedown', () => game.keys.add('s'));
-        document.getElementById('left').addEventListener('mousedown', () => game.keys.add('a'));
-        document.getElementById('right').addEventListener('mousedown', () => game.keys.add('d'));
-
-        document.getElementById('up').addEventListener('mouseup', () => game.keys.delete('w'));
-        document.getElementById('down').addEventListener('mouseup', () => game.keys.delete('s'));
-        document.getElementById('left').addEventListener('mouseup', () => game.keys.delete('a'));
-        document.getElementById('right').addEventListener('mouseup', () => game.keys.delete('d'));
 
         document.getElementById('respawn').addEventListener('click', () => {
             const player = game.sprites.find(sprite => sprite instanceof Player);
